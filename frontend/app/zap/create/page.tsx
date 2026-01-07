@@ -2,6 +2,7 @@
 
 import { BACKEND_URL } from "@/app/config";
 import { Appbar } from "@/components/Appbar";
+import { Input } from "@/components/Input";
 import { ZapCell } from "@/components/ZapCell";
 import { LinkButton } from "@/components/buttons/LinkButton";
 import { PrimaryButton } from "@/components/buttons/PrimaryButton";
@@ -39,6 +40,7 @@ export default function () {
         index: number;
         availableActionId: string;
         availableActionName: string;
+        metadata: any;
     }[]>([]);
     const [selectedModalIndex, setSelectedModalIndex] = useState<null | number>(null);
 
@@ -55,7 +57,7 @@ export default function () {
                     "triggerMetadata": {},
                     "actions": selectedActions.map(a => ({
                         availableActionId: a.availableActionId,
-                        actionMetadata: {}
+                        actionMetadata: a.metadata
                     }))
                 }, {
                     headers: {
@@ -84,7 +86,8 @@ export default function () {
                         setSelectedActions(a => [...a, {
                             index: a.length + 2,
                             availableActionId: "",
-                            availableActionName: ""
+                            availableActionName: "",
+                            metadata: {}
                         }])
                     }}><div className="text-2xl">
                             +
@@ -92,7 +95,7 @@ export default function () {
                 </div>
             </div>
         </div>
-        {selectedModalIndex && <Modal availableItems={selectedModalIndex === 1 ? availableTriggers : availableActions} onSelect={(props: null | { name: string; id: string; }) => {
+        {selectedModalIndex && <Modal availableItems={selectedModalIndex === 1 ? availableTriggers : availableActions} onSelect={(props: null | { name: string; id: string; metadata: any }) => {
             if (props === null) {
                 setSelectedModalIndex(null);
                 return;
@@ -108,7 +111,8 @@ export default function () {
                     newActions[selectedModalIndex - 2] = {
                         index: selectedModalIndex,
                         availableActionId: props.id,
-                        availableActionName: props.name
+                        availableActionName: props.name,
+                        metadata: props.metadata
                     }
                     return newActions
                 })
@@ -118,7 +122,16 @@ export default function () {
     </div>
 }
 
-function Modal({ index, onSelect, availableItems }: { index: number, onSelect: (props: null | { name: string; id: string; }) => void, availableItems: { id: string, name: string, image: string; }[] }) {
+function Modal({ index, onSelect, availableItems }: { index: number, onSelect: (props: null | { name: string; id: string; metadata: any; }) => void, availableItems: { id: string, name: string, image: string; }[] }) {
+
+    const [step, setStep] = useState(0);
+    const [selectedAction, setSelectedAction] = useState<{
+        id: string;
+        name: string;
+    }>();
+    const isTrigger = index === 1;
+
+
     return <div className="fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-slate-100 bg-opacity-70 flex">
         <div className="relative p-4 w-full max-w-2xl max-h-full">
             <div className="relative bg-white rounded-lg shadow ">
@@ -136,18 +149,54 @@ function Modal({ index, onSelect, availableItems }: { index: number, onSelect: (
                     </button>
                 </div>
                 <div className="p-4 md:p-5 space-y-4">
-                    {availableItems.map(({ id, name, image }) => {
+                    {step === 1 && selectedAction?.id === "email" && <EmailSelector setMetadata={(metadata) => {
+                        onSelect({
+                            ...selectedAction,
+                            metadata
+                        })
+                    }} />}
+
+                    {step === 0 && <div>{availableItems.map(({ id, name, image }) => {
                         return <div onClick={() => {
-                            onSelect({
-                                id,
-                                name
-                            })
+                            if (isTrigger) {
+                                onSelect({
+                                    id,
+                                    name,
+                                    metadata: {}
+                                })
+                            } else {
+                                setStep(s => s + 1);
+                                setSelectedAction({
+                                    id,
+                                    name
+                                })
+                            }
+
                         }} className="flex border p-4 cursor-pointer hover:bg-slate-100">
                             <img src={image} width={30} className="rounded-full" /> <div className="flex flex-col justify-center"> {name} </div>
                         </div>
-                    })}
+                    })} </div>}
                 </div>
             </div>
+        </div>
+    </div>
+}
+
+function EmailSelector({ setMetadata }: {
+    setMetadata: (params: any) => void;
+}) {
+    const [email, setEmail] = useState("");
+    const [body, setBody] = useState("");
+    return <div>
+        <Input label={"To"} type={"text"} placeholder="To" onChange={(e) => setEmail(e.target.value)}></Input>
+        <Input label={"Body"} type={"text"} placeholder="Body" onChange={(e) => setBody(e.target.value)}></Input>
+        <div className="pt-2">
+            <PrimaryButton onClick={() => {
+                setMetadata({
+                    email,
+                    body
+                })
+            }}>Submit</PrimaryButton>
         </div>
     </div>
 }
