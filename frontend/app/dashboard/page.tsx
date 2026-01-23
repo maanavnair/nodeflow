@@ -8,28 +8,23 @@ import { LinkButton } from "@/components/buttons/LinkButton";
 import { useRouter } from "next/navigation";
 
 interface Zap {
-    "id": string,
-    "triggerId": string,
-    "userId": number,
-    "actions": {
-        "id": string,
-        "zapId": string,
-        "actionId": string,
-        "sortingOrder": number,
-        "type": {
-            "id": string,
-            "name": string
-            "image": string
+    id: string
+    triggerId: string
+    userId: number
+    actions: {
+        id: string
+        sortingOrder: number
+        type: {
+            id: string
+            name: string
+            image: string
         }
-    }[],
-    "trigger": {
-        "id": string,
-        "zapId": string,
-        "triggerId": string,
-        "type": {
-            "id": string,
-            "name": string,
-            "image": string
+    }[]
+    trigger: {
+        type: {
+            id: string
+            name: string
+            image: string
         }
     }
 }
@@ -41,61 +36,87 @@ function useZaps() {
     useEffect(() => {
         axios.get(`${BACKEND_URL}/api/v1/zap`, {
             headers: {
-                "Authorization": localStorage.getItem("token")
+                Authorization: localStorage.getItem("token") || ""
             }
-        })
-            .then(res => {
-                setZaps(res.data.zaps);
-                setLoading(false)
-            })
+        }).then(res => {
+            setZaps(res.data.zaps);
+            setLoading(false);
+        });
     }, []);
 
-    return {
-        loading, zaps
-    }
+    return { loading, zaps };
 }
 
-export default function () {
+export default function Page() {
     const { loading, zaps } = useZaps();
     const router = useRouter();
 
-    return <div>
-        <Appbar />
-        <div className="flex justify-center pt-8">
-            <div className="max-w-screen-lg	 w-full">
-                <div className="flex justify-between pr-8 ">
-                    <div className="text-2xl font-bold">
-                        My Zaps
-                    </div>
-                    <DarkButton onClick={() => {
-                        router.push("/zap/create");
-                    }}>Create</DarkButton>
+    return (
+        <div className="min-h-screen bg-gray-100">
+            <Appbar />
+
+            <div className="max-w-6xl mx-auto px-6 py-10">
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-3xl font-bold">My Zaps</h1>
+                    <DarkButton onClick={() => router.push("/zap/create")}>
+                        + Create Zap
+                    </DarkButton>
                 </div>
+
+                {loading ? (
+                    <div className="text-center py-20 text-gray-500">
+                        Loading zaps…
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[...zaps].reverse().map(z => (
+                            <ZapCard key={z.id} zap={z} />
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
-        {loading ? "Loading..." : <div className="flex justify-center"> <ZapTable zaps={zaps} /> </div>}
-    </div>
+    );
 }
 
-function ZapTable({ zaps }: { zaps: Zap[] }) {
+function ZapCard({ zap }: { zap: Zap }) {
     const router = useRouter();
 
-    return <div className="p-8 max-w-screen-lg w-full">
-        <div className="flex">
-            <div className="flex-1">Name</div>
-            <div className="flex-1">ID</div>
-            <div className="flex-1">Created at</div>
-            <div className="flex-1">Webhook URL</div>
-            <div className="flex-1">Go</div>
+    return (
+        <div className="bg-white rounded-xl shadow hover:shadow-lg transition p-6 flex flex-col gap-4">
+
+            {/* ICON FLOW */}
+            <div className="flex items-center gap-2">
+                <img
+                    src={zap.trigger.type.image}
+                    className="w-10 h-10 rounded"
+                />
+                <span className="text-gray-400 text-xl">→</span>
+                {zap.actions.map(a => (
+                    <img
+                        key={a.id}
+                        src={a.type.image}
+                        className="w-10 h-10 rounded"
+                    />
+                ))}
+            </div>
+
+            {/* ZAP ID */}
+            <div className="text-xs font-mono text-gray-500 break-all">
+                {zap.id}
+            </div>
+
+            {/* WEBHOOK */}
+            <div className="bg-gray-100 rounded p-3 text-xs font-mono text-gray-700 break-all">
+                {`${HOOKS_URL}/hooks/catch/1/${zap.id}`}
+            </div>
+
+            {/* CTA */}
+            <div className="mt-auto flex justify-end">
+                <LinkButton onClick={() => router.push(`/zap/${zap.id}`)}>
+                    Open Zap →
+                </LinkButton>
+            </div>
         </div>
-        {zaps.map(z => <div className="flex border-b border-t py-4">
-            <div className="flex-1 flex"><img src={z.trigger.type.image} className="w-[30px] h-[30px]" /> {z.actions.map(x => <img src={x.type.image} className="w-[30px] h-[30px]" />)}</div>
-            <div className="flex-1">{z.id}</div>
-            <div className="flex-1">Nov 13, 2023</div>
-            <div className="flex-1">{`${HOOKS_URL}/hooks/catch/1/${z.id}`}</div>
-            <div className="flex-1"><LinkButton onClick={() => {
-                router.push("/zap/" + z.id)
-            }}>Go</LinkButton></div>
-        </div>)}
-    </div>
+    );
 }
