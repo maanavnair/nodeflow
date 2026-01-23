@@ -1,38 +1,31 @@
-"use client"
-import { useRouter } from "next/navigation"
-import { Feature } from "./Feature"
-import { PrimaryButton } from "./buttons/PrimaryButton"
-import { SecondaryButton } from "./buttons/SecondaryButton"
+"use client";
+import { PrimaryButton } from "./buttons/PrimaryButton";
+import { SecondaryButton } from "./buttons/SecondaryButton";
+import { useRouter } from "next/navigation";
 
 export const Hero = () => {
     const router = useRouter();
-    return <div>
-        <div className="flex justify-center">
-            <div className="text-5xl font-bold text-center pt-8 max-w-xl">
-                Automate as fast as you can type
-            </div>
-        </div>
-        <div className="flex justify-center pt-2">
-            <div className="text-xl font-bold text-center pt-8 max-w-2xl">
-                AI gives you automation superpowers, and Nodeflow puts them to work. Pairing AI and Nodeflow helps you turn ideas into workflows and bots that work for you.
-            </div>
-        </div>
 
-        <div className="flex justify-center pt-4">
-            <div className="flex">
-                <PrimaryButton onClick={() => {
-                    router.push("/signup")
-                }} size="big">Get Started free</PrimaryButton>
-                <div className="pl-4">
-                    <SecondaryButton onClick={() => { }} size="big">Contact Sales</SecondaryButton>
-                </div>
-            </div>
-        </div>
+    return (
+        <section className="max-w-6xl mx-auto px-6 py-24">
+            <h1 className="text-5xl font-extrabold text-gray-900 max-w-3xl leading-tight">
+                Build powerful automations <br /> without writing glue code
+            </h1>
 
-        <div className="flex justify-center pt-4">
-            <Feature title={"Free Forever"} subtitle={"for core features"} />
-            <Feature title={"More apps"} subtitle={"than any other platforms"} />
-            <Feature title={"Cutting Edge"} subtitle={"AI Features"} />
-        </div>
-    </div>
-}
+            <p className="mt-6 text-xl text-gray-600 max-w-2xl">
+                Nodeflow lets you connect apps, APIs, and AI into workflows that
+                actually run in production.
+            </p>
+
+            <div className="mt-10 flex gap-4">
+                <PrimaryButton size="big" onClick={() => router.push("/signup")}>
+                    Get started free
+                </PrimaryButton>
+
+                <SecondaryButton onClick={() => { }} size="big">
+                    Contact sales
+                </SecondaryButton>
+            </div>
+        </section>
+    );
+};

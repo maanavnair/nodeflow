@@ -7,11 +7,14 @@ import { PrimaryButton } from "./buttons/PrimaryButton";
 
 export const Appbar = () => {
     const router = useRouter();
+
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [hydrated, setHydrated] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
         setIsLoggedIn(!!token);
+        setHydrated(true);
     }, []);
 
     const handleLogout = () => {
@@ -20,9 +23,16 @@ export const Appbar = () => {
         router.push("/login");
     };
 
+    // ⛔ Don't render until client hydration is done
+    if (!hydrated) {
+        return (
+            <div className="h-[64px] border-b bg-white" />
+        );
+    }
+
     return (
         <div className="flex items-center justify-between border-b px-8 py-4 bg-white">
-            {/* Logo / Title */}
+            {/* Logo */}
             <div
                 className="text-2xl font-extrabold cursor-pointer"
                 onClick={() => router.push("/")}
@@ -30,7 +40,7 @@ export const Appbar = () => {
                 Nodeflow
             </div>
 
-            {/* Right side buttons */}
+            {/* Actions */}
             <div className="flex items-center gap-4">
                 {!isLoggedIn ? (
                     <>
