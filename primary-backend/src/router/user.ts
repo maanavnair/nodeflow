@@ -5,6 +5,7 @@ import { SigninSchema, SignupSchema } from "../types";
 import { prismaClient } from "../db";
 import jwt from "jsonwebtoken";
 import { JWT_PASSWORD } from "../config";
+import bcrypt from "bcrypt"
 
 const router = Router();
 
@@ -30,10 +31,12 @@ router.post("/signup", async (req, res) => {
         })
     }
 
+    const hashedPassword = await bcrypt.hash(parsedData.data.password, 10);
+
     await prismaClient.user.create({
         data: {
             email: parsedData.data.username,
-            password: parsedData.data.password,
+            password: hashedPassword,
             name: parsedData.data.name
         }
     })
@@ -58,8 +61,7 @@ router.post("/signin", async (req, res) => {
 
     const user = await prismaClient.user.findFirst({
         where: {
-            email: parsedData.data.username,
-            password: parsedData.data.password
+            email: parsedData.data.username
         }
     });
 
@@ -67,6 +69,17 @@ router.post("/signin", async (req, res) => {
         return res.status(403).json({
             message: "Invalid Credentials"
         })
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+        parsedData.data.password,
+        user.password
+    );
+
+    if (!isPasswordValid) {
+        return res.status(403).json({
+            message: "Invalid Credentials"
+        });
     }
 
     const token = jwt.sign({

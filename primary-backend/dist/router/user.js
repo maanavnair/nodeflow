@@ -19,6 +19,7 @@ const types_1 = require("../types");
 const db_1 = require("../db");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = require("../config");
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const router = (0, express_1.Router)();
 router.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
@@ -38,10 +39,11 @@ router.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function*
             message: "User already exists"
         });
     }
+    const hashedPassword = yield bcrypt_1.default.hash(parsedData.data.password, 10);
     yield db_1.prismaClient.user.create({
         data: {
             email: parsedData.data.username,
-            password: parsedData.data.password,
+            password: hashedPassword,
             name: parsedData.data.name
         }
     });
@@ -60,11 +62,16 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
     const user = yield db_1.prismaClient.user.findFirst({
         where: {
-            email: parsedData.data.username,
-            password: parsedData.data.password
+            email: parsedData.data.username
         }
     });
     if (!user) {
+        return res.status(403).json({
+            message: "Invalid Credentials"
+        });
+    }
+    const isPasswordValid = yield bcrypt_1.default.compare(parsedData.data.password, user.password);
+    if (!isPasswordValid) {
         return res.status(403).json({
             message: "Invalid Credentials"
         });
