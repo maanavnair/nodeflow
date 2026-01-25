@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
 const kafkajs_1 = require("kafkajs");
 const parser_1 = require("./parser");
+const email_1 = require("./email");
 const prismaClient = new client_1.PrismaClient();
 const TOPIC_NAME = "zap-events";
 const kafka = new kafkajs_1.Kafka({
@@ -65,6 +66,7 @@ function main() {
                 if (currentAction.type.id === "email") {
                     const body = (0, parser_1.parse)((_c = currentAction.metadata) === null || _c === void 0 ? void 0 : _c.body, zapRunMetadata);
                     const to = (0, parser_1.parse)((_d = currentAction.metadata) === null || _d === void 0 ? void 0 : _d.email, zapRunMetadata);
+                    (0, email_1.sendEmail)(to, body);
                     console.log(`Sending out email to ${to} and body is ${body}`);
                 }
                 //
