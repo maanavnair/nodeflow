@@ -67,13 +67,13 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
     });
     if (!user) {
         return res.status(403).json({
-            message: "Invalid Credentials"
+            message: "User Doesn't Exist"
         });
     }
     const isPasswordValid = yield bcrypt_1.default.compare(parsedData.data.password, user.password);
     if (!isPasswordValid) {
         return res.status(403).json({
-            message: "Invalid Credentials"
+            message: "Invalid Password"
         });
     }
     const token = jsonwebtoken_1.default.sign({

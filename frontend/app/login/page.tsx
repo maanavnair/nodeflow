@@ -7,11 +7,35 @@ import axios from "axios";
 import { useState } from "react";
 import { BACKEND_URL } from "../config";
 import { useRouter } from "next/navigation";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function () {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const router = useRouter();
+
+    const handleSubmit = async () => {
+        try {
+            const res = await axios.post(
+                `${BACKEND_URL}/api/v1/user/signin`,
+                {
+                    username: email,
+                    password,
+                }
+            );
+            localStorage.setItem("token", res.data.token);
+            router.push("/dashboard");
+            toast.success("Logged In")
+        }
+        catch (error) {
+            console.log(error);
+            if (axios.isAxiosError(error)) {
+                toast.error(error.response?.data?.message || "Login failed");
+            } else {
+                toast.error("Something went wrong");
+            }
+        }
+    }
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -31,7 +55,7 @@ export default function () {
                         </p>
 
                         <div className="space-y-4">
-                            <CheckFeature label="Create & manage Zaps easily" />
+                            <CheckFeature label="Create & manage Workflows easily" />
                             <CheckFeature label="Reliable webhooks & triggers" />
                             <CheckFeature label="Built for developers & teams" />
                         </div>
@@ -62,17 +86,7 @@ export default function () {
                         <div className="pt-6">
                             <PrimaryButton
                                 size="big"
-                                onClick={async () => {
-                                    const res = await axios.post(
-                                        `${BACKEND_URL}/api/v1/user/signin`,
-                                        {
-                                            username: email,
-                                            password,
-                                        }
-                                    );
-                                    localStorage.setItem("token", res.data.token);
-                                    router.push("/dashboard");
-                                }}
+                                onClick={handleSubmit}
                             >
                                 Log in
                             </PrimaryButton>

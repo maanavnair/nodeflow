@@ -67,7 +67,7 @@ router.post("/signin", async (req, res) => {
 
     if (!user) {
         return res.status(403).json({
-            message: "Invalid Credentials"
+            message: "User Doesn't Exist"
         })
     }
 
@@ -78,7 +78,7 @@ router.post("/signin", async (req, res) => {
 
     if (!isPasswordValid) {
         return res.status(403).json({
-            message: "Invalid Credentials"
+            message: "Invalid Password"
         });
     }
 
